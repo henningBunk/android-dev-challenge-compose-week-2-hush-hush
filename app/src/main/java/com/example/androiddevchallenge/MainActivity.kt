@@ -16,18 +16,38 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
-import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material.Button
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.ui.theme.MyTheme
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.Timer
 import kotlin.concurrent.timer
 import kotlin.math.max
 
@@ -45,43 +65,97 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun MyApp() {
     MyTheme {
-        Column {
-            var seconds by remember { mutableStateOf(0) }
-            var timer: Timer? by remember { mutableStateOf(null)}
+        Surface(
+            color = MaterialTheme.colors.surface,
+            contentColor = Color.Cyan
+        ) {
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                var seconds by remember { mutableStateOf(0) }
+                var timer: Timer? by remember { mutableStateOf(null) }
 
-            Clock(
-                seconds = seconds,
-                onSecondsChanged = { diff ->
-                    seconds = max(0, seconds + diff)
-                }
-            )
+                Clock(
+                    seconds = seconds,
+                    onSecondsChanged = { diff ->
+                        seconds = max(0, seconds + diff)
+                    }
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
-            Button(onClick = {
-                timer = timer(period = 1000) {
-                    when {
-                        seconds <= 0 -> cancel()
-                        else -> seconds--
+                    Crossfade(targetState = timer) { screen ->
+                        when (screen) {
+                            null -> StylishButton(
+                                onClick = {
+                                    timer = timer(period = 1000) {
+                                        when {
+                                            seconds <= 0 -> {
+                                                cancel()
+                                                timer = null
+                                            }
+                                            else -> seconds--
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = "START",
+                                    color = Color.Cyan
+                                )
+                            }
+
+                            else -> StylishButton(
+                                onClick = {
+                                    timer?.cancel()
+                                    timer = null
+                                }
+                            ) {
+                                Text(
+                                    text = "PAUSE",
+                                    color = Color.Cyan
+                                )
+                            }
+                        }
+                    }
+
+                    StylishButton(
+                        onClick = {
+                            timer?.cancel()
+                            seconds = 0
+                            timer = null
+                        }
+                    ) {
+                        Text(
+                            text = "STOP",
+                            color = Color.Cyan
+                        )
                     }
                 }
-            }) {
-                Text(text = "START")
-            }
-
-            Button(onClick = {
-                timer?.cancel()
-                seconds = 0
-            }) {
-                Text(text = "STOP")
-            }
-
-            Button(onClick = {
-                timer?.cancel()
-            }) {
-                Text(text = "PAUSE")
             }
         }
     }
 }
+
+@Composable
+private fun StylishButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit,
+) = OutlinedButton(
+    border = BorderStroke(2.dp, Color.Cyan), // Todo use material theme
+    modifier = modifier
+        .padding(8.dp)
+        .height(48.dp)
+        .width(120.dp),
+    onClick = onClick,
+    content = content
+)
 
 @Composable
 private fun Clock(
@@ -90,15 +164,26 @@ private fun Clock(
 ) {
     Column {
 
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             val minutes = seconds / 60
             val remainingSeconds = seconds % 60
 
-            Digits(minutes, onSecondsChanged)
-            Text(":")
-            Digits(remainingSeconds, onSecondsChanged)
+            Digits(minutes)
+            Text(
+                text = ":",
+                style = MaterialTheme.typography.h2,
+                fontWeight = FontWeight.Bold
+            )
+            Digits(remainingSeconds)
         }
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
             MinutesPicker(onSecondsChanged = onSecondsChanged)
             SecondsPicker(onSecondsChanged = onSecondsChanged)
         }
@@ -106,39 +191,47 @@ private fun Clock(
 }
 
 @Composable
-fun Digits(
-    time: Int,
-    onSecondsChanged: (Int) -> Unit,
-) {
-    Column {
-        Row {
-            Text(String.format("%02d", time))
-        }
+fun Digits(time: Int) {
+    Row {
+        Text(
+            text = String.format("%02d", time),
+            style = MaterialTheme.typography.h1
+        )
     }
-
-
 }
 
 @Composable
 fun MinutesPicker(onSecondsChanged: (Int) -> Unit) {
-    Row {
-        Button(onClick = { onSecondsChanged(-60) }) {
-            Text(text = "-")
+    Column {
+        StylishButton(onClick = { onSecondsChanged(60) }) {
+            Text(
+                text = "+",
+                color = Color.Cyan
+            )
         }
-        Button(onClick = { onSecondsChanged(60) }) {
-            Text(text = "+")
+        StylishButton(onClick = { onSecondsChanged(-60) }) {
+            Text(
+                text = "-",
+                color = Color.Cyan
+            )
         }
     }
 }
 
 @Composable
 fun SecondsPicker(onSecondsChanged: (Int) -> Unit) {
-    Row {
-        Button(onClick = { onSecondsChanged(-1) }) {
-            Text(text = "-")
+    Column {
+        StylishButton(onClick = { onSecondsChanged(+1) }) {
+            Text(
+                text = "+",
+                color = Color.Cyan
+            )
         }
-        Button(onClick = { onSecondsChanged(+1) }) {
-            Text(text = "+")
+        StylishButton(onClick = { onSecondsChanged(-1) }) {
+            Text(
+                text = "-",
+                color = Color.Cyan
+            )
         }
     }
 }

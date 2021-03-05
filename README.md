@@ -3,15 +3,18 @@
 ![Workflow result](https://github.com/henningBunk/android-dev-challenge-compose-week-2-hush-hush/workflows/Check/badge.svg)
 
 ## :scroll: Description
-<!--- Describe your app in one or two sentences -->
 
-TODO
+A simple timer app. UI is written with Jetpack Compose. My entry to the Android Dev Challenge Week 2.
 
 ## :bulb: Motivation and Context
-<!--- Optionally point readers to interesting parts of your submission. -->
-<!--- What are you especially proud of? -->
 
-TODO
+Right now this isn't really pretty. I had troubles using the MaterialTheme components. For me this was a learning experience in using state in Compose.
+When I find the time I would like to improve several things:
+
+- [ ] Use MaterialTheme correctly
+- [ ] Add a circle animation
+- [ ] Improve the seperation of concerns with a ViewModel
+- [ ] Replace the +/- buttons with gestures
 
 ## :camera_flash: Screenshots
 <!-- You can add more screenshots here if you like -->
