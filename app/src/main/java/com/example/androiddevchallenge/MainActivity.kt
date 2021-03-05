@@ -130,7 +130,7 @@ fun MyApp() {
                         }
                     ) {
                         Text(
-                            text = "STOP",
+                            text = "RESET",
                             color = Color.Cyan
                         )
                     }
