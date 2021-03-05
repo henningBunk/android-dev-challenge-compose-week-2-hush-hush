@@ -16,14 +16,20 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.os.CountDownTimer
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.Button
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.androiddevchallenge.ui.theme.MyTheme
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.concurrent.timer
+import kotlin.math.max
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,11 +42,104 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-// Start building your app here!
 @Composable
 fun MyApp() {
-    Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+    MyTheme {
+        Column {
+            var seconds by remember { mutableStateOf(0) }
+            var timer: Timer? by remember { mutableStateOf(null)}
+
+            Clock(
+                seconds = seconds,
+                onSecondsChanged = { diff ->
+                    seconds = max(0, seconds + diff)
+                }
+            )
+
+            Button(onClick = {
+                timer = timer(period = 1000) {
+                    when {
+                        seconds <= 0 -> cancel()
+                        else -> seconds--
+                    }
+                }
+            }) {
+                Text(text = "START")
+            }
+
+            Button(onClick = {
+                timer?.cancel()
+                seconds = 0
+            }) {
+                Text(text = "STOP")
+            }
+
+            Button(onClick = {
+                timer?.cancel()
+            }) {
+                Text(text = "PAUSE")
+            }
+        }
+    }
+}
+
+@Composable
+private fun Clock(
+    seconds: Int,
+    onSecondsChanged: (Int) -> Unit,
+) {
+    Column {
+
+        Row {
+            val minutes = seconds / 60
+            val remainingSeconds = seconds % 60
+
+            Digits(minutes, onSecondsChanged)
+            Text(":")
+            Digits(remainingSeconds, onSecondsChanged)
+        }
+        Row {
+            MinutesPicker(onSecondsChanged = onSecondsChanged)
+            SecondsPicker(onSecondsChanged = onSecondsChanged)
+        }
+    }
+}
+
+@Composable
+fun Digits(
+    time: Int,
+    onSecondsChanged: (Int) -> Unit,
+) {
+    Column {
+        Row {
+            Text(String.format("%02d", time))
+        }
+    }
+
+
+}
+
+@Composable
+fun MinutesPicker(onSecondsChanged: (Int) -> Unit) {
+    Row {
+        Button(onClick = { onSecondsChanged(-60) }) {
+            Text(text = "-")
+        }
+        Button(onClick = { onSecondsChanged(60) }) {
+            Text(text = "+")
+        }
+    }
+}
+
+@Composable
+fun SecondsPicker(onSecondsChanged: (Int) -> Unit) {
+    Row {
+        Button(onClick = { onSecondsChanged(-1) }) {
+            Text(text = "-")
+        }
+        Button(onClick = { onSecondsChanged(+1) }) {
+            Text(text = "+")
+        }
     }
 }
 
